@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Bell, Search, Menu, Brain, Calendar, Clock, Globe } from 'lucide-react';
+import { Bell, Search, Menu, Brain, Clock } from 'lucide-react';
 import { Button } from '@/components/ui';
-import { STADIUM_NAME, EVENT_NAME, getCurrentMatch } from '@/lib/constants';
+import { getCurrentMatch } from '@/lib/constants';
 
 interface TopbarProps {
   onToggleSidebar: () => void;

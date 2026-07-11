@@ -64,7 +64,7 @@ export default function ExecutiveDashboard() {
             StadiumIQ AI Command Center
           </h2>
           <p className="text-xs text-text-secondary mt-1">
-            Today's Match: <strong className="text-text-primary">{currentMatch.name}</strong> ({currentMatch.time} kickoff). Operational logistics console.
+            {"Today's Match:"} <strong className="text-text-primary">{currentMatch.name}</strong> ({currentMatch.time} kickoff). Operational logistics console.
           </p>
         </div>
 

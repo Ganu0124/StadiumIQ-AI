@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, Badge, Button } from '@/components/ui';
 import { aiInsights } from '@/data/mock-data';
-import { Brain, ArrowRight, CheckCircle2, ChevronRight, Zap } from 'lucide-react';
+import { Brain, Zap } from 'lucide-react';
 
 interface AIInsightCardProps {
   onActionExecute?: (actionId: string) => void;

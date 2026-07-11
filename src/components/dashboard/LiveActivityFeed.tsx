@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card, Badge } from '@/components/ui';
+import { Card } from '@/components/ui';
 import { activityFeed } from '@/data/mock-data';
 import { getRelativeTime } from '@/lib/utils';
 import {

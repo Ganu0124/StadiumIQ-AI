@@ -152,6 +152,10 @@ stadiumiq-ai/
 2. Configure `NEXT_PUBLIC_GEMINI_API_KEY` in environment variables settings.
 3. Deploy.
 
+### Render Deployment
+1. Deploy with one-click on [Render](https://render.com) using the connected `render.yaml` blueprint.
+2. Refer to [RENDER_DEPLOYMENT.md](file:///d:/projects/stadiumiq-ai/RENDER_DEPLOYMENT.md) for step-by-step guides.
+
 ### Google Cloud Run Deployment
 1. Build container image:
    ```bash
@@ -171,6 +175,3 @@ stadiumiq-ai/
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for details.
-=======
-# stadiumiq-ai
->>>>>>> 0831f4dc136a93227524be1740c6df21f445678f

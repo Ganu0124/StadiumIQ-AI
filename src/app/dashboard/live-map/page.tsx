@@ -1,13 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState } from 'react';
 import { StadiumMap } from '@/components/maps/StadiumMap';
 import { Card, Button, Badge, ProgressBar } from '@/components/ui';
-import { crowdZones, incidents } from '@/data/mock-data';
-import {
-  MapPin, Eye, Compass, LayoutGrid, Heart, Flame, ShieldAlert,
-  Settings, Users, DoorOpen
-} from 'lucide-react';
+import { incidents } from '@/data/mock-data';
+import { Compass } from 'lucide-react';
 
 export default function LiveMapPage() {
   const [mapFilter, setMapFilter] = useState<'density' | 'facilities' | 'emergency'>('density');

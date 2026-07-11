@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState } from 'react';
-import { Card, Badge, Tooltip } from '@/components/ui';
+import { Card } from '@/components/ui';
 import { cn } from '@/lib/utils';
-import { MapPin, Info, AlertTriangle, Eye, Navigation } from 'lucide-react';
+import { Info, AlertTriangle } from 'lucide-react';
 
 interface StadiumMapProps {
   filter: 'density' | 'facilities' | 'emergency';
