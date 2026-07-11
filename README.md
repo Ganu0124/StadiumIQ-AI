@@ -12,13 +12,14 @@
 
 ## 📖 Table of Contents
 1. [Overview & Solution](#-overview--solution)
-2. [Key Command Modules](#-key-command-modules)
-3. [Tech Stack](#%EF%B8%8F-tech-stack)
-4. [Project Structure](#-project-structure)
-5. [Getting Started](#-getting-started)
-6. [Deployment Blueprint](#-deployment-blueprint)
-7. [API Integrations](#-api-integrations)
-8. [Author & Contact](#-author--contact)
+2. [Architecture Diagrams](#%EF%B8%8F-architecture-diagrams)
+3. [Key Command Modules](#-key-command-modules)
+4. [Operations Flowchart](#%EF%B8%8F-operations-flowchart)
+5. [Tech Stack](#%EF%B8%8F-tech-stack)
+6. [Project Structure](#-project-structure)
+7. [Getting Started](#-getting-started)
+8. [Deployment Blueprint](#-deployment-blueprint)
+9. [Author & Contact](#-author--contact)
 
 ---
 
@@ -30,6 +31,42 @@ Large-scale sporting events struggle with crowd surges, long queues, security em
 * **Generative Triage Plans**: Automatically drafts tactical playbooks using Gemini.
 * **Multilingual Communications**: Instantly translates emergency broadcasts and fan responses.
 * **Predictive Queues**: Tracks gate load factors to preempt congestions.
+
+---
+
+## 🏗️ Architecture Diagrams
+
+This is the system architecture showing how the Next.js frontend, persistent local database API handlers, and the Google Gemini API integrate to process stadium data:
+
+```mermaid
+graph TD
+    %% Styling
+    classDef client fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#f8fafc;
+    classDef server fill:#0f172a,stroke:#eab308,stroke-width:2px,color:#f8fafc;
+    classDef external fill:#1e1b4b,stroke:#ef4444,stroke-width:2px,color:#f8fafc;
+
+    %% Components
+    User[💻 User Browser / Client]:::client
+    NextApp[⚙️ Next.js App Router]:::server
+    AuthCtx[🔑 Auth Session Context]:::server
+    Recharts[📊 Recharts Rendering]:::client
+    MapSVG[🗺️ Interactive SVG Maps]:::client
+
+    API[📡 JSON API Endpoints /api/incidents]:::server
+    JSONDB[💾 Local Persistent JSON DB /db.json]:::server
+    GeminiClient[🤖 Google Gemini API Client]:::server
+    GeminiAPI[🧠 Google Gemini AI Cloud]:::external
+
+    %% Relations
+    User --> AuthCtx
+    User --> Recharts
+    User --> MapSVG
+    MapSVG & Recharts --> NextApp
+    NextApp --> API
+    API --> JSONDB
+    NextApp --> GeminiClient
+    GeminiClient --> GeminiAPI
+```
 
 ---
 
@@ -47,6 +84,30 @@ Our dashboard includes **16 specialized command panels** tailored to FIFA stadiu
 | 🍔 **Food & Vendors** | Concessions restocking | High-sales tracking charts, low-stock alarms, and supply transit routes. |
 | 📢 **Announcements** | Multilingual emergency PA | Broadcast creation with auto-translation (English, Spanish, French, Portuguese). |
 | 💬 **Fan Concierge** | AI assistant chat | Multilingual virtual fan support bot. |
+
+---
+
+## ⚙️ Operations Flowchart
+
+Here is the operational workflow for handling active security and medical incidents:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Operator as Stadium Operator
+    participant Dashboard as System Dashboard
+    participant API as Local JSON Database API
+    participant Gemini as Google Gemini AI
+    participant Dispatched as Action Units
+
+    Operator->>Dashboard: Flags or registers new emergency incident
+    Dashboard->>API: Writes payload to db.json (/api/incidents)
+    API-->>Dashboard: Returns persistent incident item
+    Dashboard->>Gemini: Sends incident description for triage plan
+    Gemini-->>Dashboard: Returns generative tactical response playbook
+    Dashboard->>Operator: Renders action plan with maps & schedules
+    Operator->>Dispatched: Dispatches paramedic/security units
+```
 
 ---
 
