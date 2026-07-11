@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # StadiumIQ AI 🏟️🤖
 
 > **AI-Powered Smart Stadium Operations & Fan Experience Platform** built for FIFA World Cup 2026™ Operations.
