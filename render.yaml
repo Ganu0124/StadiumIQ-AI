@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: stadiumiq-ai
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.0.0
+      - key: NEXT_PUBLIC_GEMINI_API_KEY
+        sync: false
+      - key: NEXT_TELEMETRY_DISABLED
+        value: 1

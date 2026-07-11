@@ -1,36 +1,172 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# StadiumIQ AI 🏟️🤖
 
-## Getting Started
+> **AI-Powered Smart Stadium Operations & Fan Experience Platform** built for FIFA World Cup 2026™ Operations.
 
-First, run the development server:
+StadiumIQ AI is a production-ready, enterprise-grade stadium management dashboard designed to coordinate crowd logistics, surveillance security alerts, medical incident triage, traffic/parking rerouting, and vendor concession levels during major sporting events.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 📖 Problem Statement
+
+Large sporting events face severe operational challenges including crowd congestion, long gate queues, emergency coordination, multilingual communication gaps, parking traffic congestion, security perimeter threats, food concession stockouts, and sensor telemetry fragmentation. Legacy systems are siloed and lack automated decision support desks.
+
+---
+
+## 💡 Solution
+
+StadiumIQ AI unifies data grids (gates, seats, EV parking lot, concession outlets, threat indicators) into a single, cohesive command console powered by Google Gemini. The platform processes logs and automatically creates action playbooks, medical triages, and translation texts.
+
+---
+
+## 🌟 Features
+
+* **Executive Dashboard**: Consolidated control console tracking current attendance, gate speed metrics, active medical emergencies, and overall AI risk score.
+* **Interactive SVG Map**: Stand occupancy heat indicators, restroom/food amenities markers, and emergency exit routes.
+* **Predictive Crowd Logistics**: Gate queue forecasts (15-60m forecast models) suggesting staff dispatch and lane openings.
+* **Incident Command**: Timelines tracking active alarms with Gemini-generated triage plans and incident briefs.
+* **Surveillance Co-Pilot**: Camera feeds alerting staff on drone operators or badge forgeries.
+* **Transit & Parking**: Lot capacities, walking offsets, charging indicators, and digital highway routing signs.
+* **Concession Restocking**: Concourse vendor sales tracking with cargo redistribution guides.
+* **Multilingual Broadcast**: PA scoreboard announcement draft translations (English, Spanish, French, Portuguese).
+* **Fan Chatbot Helper**: Conversational concierge mapping seat navigation, nearest restrooms, or emergency assistance.
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+graph TD
+    A[Client UI - Next.js App Router] --> B[Design Token Layer - Tailwind v4]
+    A --> C[Interactive Visual Layer - Recharts & Custom SVG Map]
+    A --> D[Mock Data Context / Local State]
+    D --> E[Gemini Decision Support Layer]
+    E --> F[API Routes / mock AI Prompt Engines]
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. **Client Workspace**: Next.js 16 / React 19 client templates.
+2. **Design Tokens**: Standardized colors (primary blue, accent gold) and glassmorphism parameters handled via Tailwind v4 `@theme inline`.
+3. **Data Grid**: Mock schemas mapping coordinates (gates, seats, parking EV slots, concessions).
+4. **AI Solver**: Prompt engineering templates acting as decision desks for redirects, triages, and announcements.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📂 Project Structure
 
-## Learn More
+```
+stadiumiq-ai/
+├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   └── bug_report.md
+│   ├── pull_request_template.md
+│   └── workflows/
+│       └── deploy.yml
+├── docs/                         # Additional system documentation
+├── public/                       # Icons, Static Assets
+├── src/
+│   ├── app/                      # Next.js App Router Layout & pages
+│   │   ├── (auth)/               # Login & recovery
+│   │   ├── dashboard/            # 16 Interactive Dashboard pages
+│   │   │   ├── analytics/
+│   │   │   ├── announcements/
+│   │   │   ├── crowd/
+│   │   │   ├── fan-concierge/
+│   │   │   ├── food-vendors/
+│   │   │   ├── incident-management/
+│   │   │   ├── live-map/
+│   │   │   ├── medical/
+│   │   │   ├── operations/
+│   │   │   ├── parking/
+│   │   │   ├── profile/
+│   │   │   ├── reports/
+│   │   │   ├── security/
+│   │   │   ├── settings/
+│   │   │   └── page.tsx
+│   │   ├── globals.css           # Tailwind + Glassmorphism styles
+│   │   └── page.tsx              # Landing page
+│   ├── components/
+│   │   ├── layout/               # Sidebar & Topbar panels
+│   │   ├── ui/                   # Button, Card, Badge, Progress UI
+│   │   ├── charts/               # Recharts adapters
+│   │   └── maps/                 # SVG maps
+│   ├── constants/                # Constants re-exports
+│   ├── context/                  # AuthContext Provider
+│   ├── data/                     # Mock statistics schemas
+│   ├── hooks/                    # useAuth Hooks
+│   ├── lib/                      # Core constants & utils
+│   ├── services/                 # Gemini API clients
+│   ├── types/                    # TypeScript interfaces
+│   └── utils/                    # Utilities index
+├── Dockerfile                    # Multi-stage production container configuration
+├── docker-compose.yml            # Local scaling configuration
+├── package.json
+└── tsconfig.json
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Installation & Environment Configuration
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Copy the Environment Template**:
+   ```bash
+   cp .env.example .env
+   ```
 
-## Deploy on Vercel
+2. **Define Variables**:
+   ```env
+   NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Install Packages**:
+   ```bash
+   npm install
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. **Launch Server**:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## ⚡ API Documentation
+
+### 1. Incident Decision Support
+* **Endpoint**: `/api/ai/summarize`
+* **Method**: `POST`
+* **Response**:
+  ```json
+  {
+    "summary": "AI Summary: Critical crowd surge at Gate B1...",
+    "recommendation": "Open auxiliary lanes and redirect traffic..."
+  }
+  ```
+
+---
+
+## 📦 Deployment Guide
+
+### Vercel Deployment
+1. Connect repository on [Vercel Dashboard](https://vercel.com).
+2. Configure `NEXT_PUBLIC_GEMINI_API_KEY` in environment variables settings.
+3. Deploy.
+
+### Google Cloud Run Deployment
+1. Build container image:
+   ```bash
+   docker build -t gcr.io/[PROJECT-ID]/stadiumiq-ai:latest .
+   ```
+2. Push container to Artifact Registry:
+   ```bash
+   docker push gcr.io/[PROJECT-ID]/stadiumiq-ai:latest
+   ```
+3. Deploy to Cloud Run:
+   ```bash
+   gcloud run deploy stadiumiq-ai --image gcr.io/[PROJECT-ID]/stadiumiq-ai:latest --platform managed
+   ```
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for details.

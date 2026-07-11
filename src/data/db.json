@@ -1,0 +1,42 @@
+{
+  "incidents": [
+    {
+      "id": "INC-001",
+      "title": "Crowd Surge at Gate B1",
+      "description": "Unusual crowd density detected near Gate B1. Multiple fans reporting difficulty moving.",
+      "type": "crowd",
+      "priority": "high",
+      "status": "in-progress",
+      "location": "Gate B1 - North Entrance",
+      "reportedAt": "2026-07-10T19:12:00Z",
+      "assignedTo": "Team Alpha",
+      "aiSummary": "Crowd density at Gate B1 has exceeded 95% capacity. The surge coincides with late arrivals for the second half. Estimated 2,400 fans still queuing.",
+      "aiRecommendation": "Open auxiliary lanes at Gate B1. Redirect overflow to Gates A2 and C1."
+    },
+    {
+      "id": "INC-002",
+      "title": "Medical Emergency Section 214",
+      "description": "Fan collapsed in Section 214, Row 12. Possible heat stroke.",
+      "type": "medical",
+      "priority": "critical",
+      "status": "in-progress",
+      "location": "Section 214, Row 12",
+      "reportedAt": "2026-07-10T19:25:00Z",
+      "assignedTo": "Dr. Martinez",
+      "aiSummary": "Male fan collapsed during second half. Temperature recorded at 32°C.",
+      "aiRecommendation": "Immediate first aid with cooling measures. Prepare ambulance for potential hospital transfer."
+    }
+  ],
+  "announcements": [
+    {
+      "id": "ann1",
+      "title": "Gate B1 Congestion Advisory",
+      "message": "Heavy congestion near Gate B1. Please use Gates A2 or C1 for faster entry.",
+      "type": "warning",
+      "language": "en",
+      "createdAt": "2026-07-10T19:12:00Z",
+      "status": "published",
+      "generatedByAI": true
+    }
+  ]
+}
