@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # StadiumIQ AI 🏟️🤖
 
 > **AI-Powered Smart Stadium Operations & Fan Experience Platform** built for FIFA World Cup 2026™ Operations.
@@ -170,3 +171,6 @@ stadiumiq-ai/
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for details.
+=======
+# stadiumiq-ai
+>>>>>>> 0831f4dc136a93227524be1740c6df21f445678f
