@@ -1,176 +1,140 @@
 # StadiumIQ AI 🏟️🤖
 
-> **AI-Powered Smart Stadium Operations & Fan Experience Platform** built for FIFA World Cup 2026™ Operations.
+[![Build & Verification Pipeline](https://github.com/Ganu0124/StadiumIQ-AI/actions/workflows/deploy.yml/badge.svg)](https://github.com/Ganu0124/StadiumIQ-AI/actions/workflows/deploy.yml)
+[![Next.js](https://img.shields.io/badge/Next.js-16.0-black?style=flat&logo=next.dotjs)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.0-blue?style=flat&logo=react)](https://react.dev/)
+[![Gemini](https://img.shields.io/badge/Google_Gemini-API_v2-red?style=flat&logo=googlegemini)](https://aistudio.google.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-StadiumIQ AI is a production-ready, enterprise-grade stadium management dashboard designed to coordinate crowd logistics, surveillance security alerts, medical incident triage, traffic/parking rerouting, and vendor concession levels during major sporting events.
-
----
-
-## 📖 Problem Statement
-
-Large sporting events face severe operational challenges including crowd congestion, long gate queues, emergency coordination, multilingual communication gaps, parking traffic congestion, security perimeter threats, food concession stockouts, and sensor telemetry fragmentation. Legacy systems are siloed and lack automated decision support desks.
+> **StadiumIQ AI** is a state-of-the-art, enterprise-grade stadium management and fan logistics dashboard built for **FIFA World Cup 2026™ operations**. It consolidates fragmented operational silos into a single, real-time command console powered by Google Gemini.
 
 ---
 
-## 💡 Solution
-
-StadiumIQ AI unifies data grids (gates, seats, EV parking lot, concession outlets, threat indicators) into a single, cohesive command console powered by Google Gemini. The platform processes logs and automatically creates action playbooks, medical triages, and translation texts.
-
----
-
-## 🌟 Features
-
-* **Executive Dashboard**: Consolidated control console tracking current attendance, gate speed metrics, active medical emergencies, and overall AI risk score.
-* **Interactive SVG Map**: Stand occupancy heat indicators, restroom/food amenities markers, and emergency exit routes.
-* **Predictive Crowd Logistics**: Gate queue forecasts (15-60m forecast models) suggesting staff dispatch and lane openings.
-* **Incident Command**: Timelines tracking active alarms with Gemini-generated triage plans and incident briefs.
-* **Surveillance Co-Pilot**: Camera feeds alerting staff on drone operators or badge forgeries.
-* **Transit & Parking**: Lot capacities, walking offsets, charging indicators, and digital highway routing signs.
-* **Concession Restocking**: Concourse vendor sales tracking with cargo redistribution guides.
-* **Multilingual Broadcast**: PA scoreboard announcement draft translations (English, Spanish, French, Portuguese).
-* **Fan Chatbot Helper**: Conversational concierge mapping seat navigation, nearest restrooms, or emergency assistance.
+## 📖 Table of Contents
+1. [Overview & Solution](#-overview--solution)
+2. [Key Command Modules](#-key-command-modules)
+3. [Tech Stack](#%EF%B8%8F-tech-stack)
+4. [Project Structure](#-project-structure)
+5. [Getting Started](#-getting-started)
+6. [Deployment Blueprint](#-deployment-blueprint)
+7. [API Integrations](#-api-integrations)
+8. [Author & Contact](#-author--contact)
 
 ---
 
-## 🏗️ System Architecture
+## 💡 Overview & Solution
 
-```mermaid
-graph TD
-    A[Client UI - Next.js App Router] --> B[Design Token Layer - Tailwind v4]
-    A --> C[Interactive Visual Layer - Recharts & Custom SVG Map]
-    A --> D[Mock Data Context / Local State]
-    D --> E[Gemini Decision Support Layer]
-    E --> F[API Routes / mock AI Prompt Engines]
-```
+Large-scale sporting events struggle with crowd surges, long queues, security emergencies, concessions supply delays, and medical dispatch latency. 
 
-1. **Client Workspace**: Next.js 16 / React 19 client templates.
-2. **Design Tokens**: Standardized colors (primary blue, accent gold) and glassmorphism parameters handled via Tailwind v4 `@theme inline`.
-3. **Data Grid**: Mock schemas mapping coordinates (gates, seats, parking EV slots, concessions).
-4. **AI Solver**: Prompt engineering templates acting as decision desks for redirects, triages, and announcements.
+**StadiumIQ AI** addresses these problems by aggregating real-time sensor streams and telemetry data:
+* **Generative Triage Plans**: Automatically drafts tactical playbooks using Gemini.
+* **Multilingual Communications**: Instantly translates emergency broadcasts and fan responses.
+* **Predictive Queues**: Tracks gate load factors to preempt congestions.
 
 ---
 
-## 📂 Project Structure
+## 🏟️ Key Command Modules
 
-```
+Our dashboard includes **16 specialized command panels** tailored to FIFA stadium workflows:
+
+| Module | Purpose | Features |
+| --- | --- | --- |
+| 📊 **Executive Dashboard** | Core operations hub | Dynamic match calendars, live gates load, active priority alarm widgets, master CSV exporter. |
+| 👥 **Crowd Intelligence** | Entrance queue tracking | 15-minute predictive wait-time models & staff rerouting dispatch options. |
+| 🔒 **Security Center** | Perimeter surveillance | AI drone telemetry feeds, threat levels, and security SOP playbooks. |
+| 🚑 **Medical Response** | Incident triage | Paramedic location mapping, patient priority level queues, response checklist. |
+| 🚗 **Parking Management** | Traffic flow coordination | Lot occupancy logs, EV charging indicators, and dynamic highway routing sign boards. |
+| 🍔 **Food & Vendors** | Concessions restocking | High-sales tracking charts, low-stock alarms, and supply transit routes. |
+| 📢 **Announcements** | Multilingual emergency PA | Broadcast creation with auto-translation (English, Spanish, French, Portuguese). |
+| 💬 **Fan Concierge** | AI assistant chat | Multilingual virtual fan support bot. |
+
+---
+
+## 🛠️ Tech Stack
+
+* **Frontend Framework**: Next.js 16 (App Router with Turbopack compilation)
+* **User Interface**: React 19, Vanilla CSS (Premium FIFA Dark Mode theme)
+* **Icons & Assets**: Lucide React
+* **Data Visualization**: Recharts (Dynamic Area, Bar, and Donut charts)
+* **Intelligence Layer**: Google Gemini SDK (`@google/genai`)
+
+---
+
+## 📁 Project Structure
+
+```bash
 stadiumiq-ai/
-├── .github/
-│   ├── ISSUE_TEMPLATE/
-│   │   └── bug_report.md
-│   ├── pull_request_template.md
-│   └── workflows/
-│       └── deploy.yml
-├── docs/                         # Additional system documentation
-├── public/                       # Icons, Static Assets
 ├── src/
-│   ├── app/                      # Next.js App Router Layout & pages
-│   │   ├── (auth)/               # Login & recovery
-│   │   ├── dashboard/            # 16 Interactive Dashboard pages
-│   │   │   ├── analytics/
-│   │   │   ├── announcements/
-│   │   │   ├── crowd/
-│   │   │   ├── fan-concierge/
-│   │   │   ├── food-vendors/
-│   │   │   ├── incident-management/
-│   │   │   ├── live-map/
-│   │   │   ├── medical/
-│   │   │   ├── operations/
-│   │   │   ├── parking/
-│   │   │   ├── profile/
-│   │   │   ├── reports/
-│   │   │   ├── security/
-│   │   │   ├── settings/
-│   │   │   └── page.tsx
-│   │   ├── globals.css           # Tailwind + Glassmorphism styles
-│   │   └── page.tsx              # Landing page
+│   ├── app/                      # Next.js pages & API routes
+│   │   ├── (auth)/               # Login & Forgot Password screens
+│   │   ├── api/                  # JSON DB read/write endpoints
+│   │   └── dashboard/            # 16 Command modules
 │   ├── components/
-│   │   ├── layout/               # Sidebar & Topbar panels
-│   │   ├── ui/                   # Button, Card, Badge, Progress UI
+│   │   ├── dashboard/            # KPI cards & Activity feeds
+│   │   ├── layout/               # Sidebar & Topbar components
 │   │   ├── charts/               # Recharts adapters
-│   │   └── maps/                 # SVG maps
-│   ├── constants/                # Constants re-exports
+│   │   └── maps/                 # Interactive SVG maps
+│   ├── constants/                # Project constants
 │   ├── context/                  # AuthContext Provider
-│   ├── data/                     # Mock statistics schemas
-│   ├── hooks/                    # useAuth Hooks
-│   ├── lib/                      # Core constants & utils
-│   ├── services/                 # Gemini API clients
-│   ├── types/                    # TypeScript interfaces
-│   └── utils/                    # Utilities index
-├── Dockerfile                    # Multi-stage production container configuration
-├── docker-compose.yml            # Local scaling configuration
-├── package.json
-└── tsconfig.json
+│   ├── data/                     # Persistent JSON Database
+│   ├── lib/                      # Exporter utilities
+│   └── services/                 # Google Gemini API client
 ```
 
 ---
 
-## 🚀 Installation & Environment Configuration
+## 🚀 Getting Started
 
-1. **Copy the Environment Template**:
-   ```bash
-   cp .env.example .env
-   ```
+### 1. Environment Set Up
+Clone the project and copy the template:
+```bash
+cp .env.example .env
+```
+Define your Gemini token:
+```env
+NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
+```
 
-2. **Define Variables**:
-   ```env
-   NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
-   ```
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-3. **Install Packages**:
-   ```bash
-   npm install
-   ```
+### 3. Run Development Server
+```bash
+# Windows PowerShell workaround
+cmd /c "npm run dev"
+```
+Navigate to [http://localhost:3000](http://localhost:3000) to preview.
 
-4. **Launch Server**:
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## ⚡ API Documentation
-
-### 1. Incident Decision Support
-* **Endpoint**: `/api/ai/summarize`
-* **Method**: `POST`
-* **Response**:
-  ```json
-  {
-    "summary": "AI Summary: Critical crowd surge at Gate B1...",
-    "recommendation": "Open auxiliary lanes and redirect traffic..."
-  }
-  ```
+### 🔑 Test Credentials
+Log in with:
+* **Email**: `admin@stadium.com`
+* **Password**: `password123`
 
 ---
 
-## 📦 Deployment Guide
+## 📦 Deployment Blueprint
 
-### Vercel Deployment
-1. Connect repository on [Vercel Dashboard](https://vercel.com).
-2. Configure `NEXT_PUBLIC_GEMINI_API_KEY` in environment variables settings.
-3. Deploy.
+### Render.com Deployment
+The repository includes a custom `render.yaml` configuration.
+1. Connect this repo to your [Render Dashboard](https://render.com).
+2. Render will automatically detect the `Dockerfile` and configure a clean Node container environment.
+3. Configure `NEXT_PUBLIC_GEMINI_API_KEY` in Render environment variables.
+4. Click deploy. Refer to [RENDER_DEPLOYMENT.md](file:///d:/projects/stadiumiq-ai/RENDER_DEPLOYMENT.md) for more details.
 
-### Render Deployment
-1. Deploy with one-click on [Render](https://render.com) using the connected `render.yaml` blueprint.
-2. Refer to [RENDER_DEPLOYMENT.md](file:///d:/projects/stadiumiq-ai/RENDER_DEPLOYMENT.md) for step-by-step guides.
+---
 
-### Google Cloud Run Deployment
-1. Build container image:
-   ```bash
-   docker build -t gcr.io/[PROJECT-ID]/stadiumiq-ai:latest .
-   ```
-2. Push container to Artifact Registry:
-   ```bash
-   docker push gcr.io/[PROJECT-ID]/stadiumiq-ai:latest
-   ```
-3. Deploy to Cloud Run:
-   ```bash
-   gcloud run deploy stadiumiq-ai --image gcr.io/[PROJECT-ID]/stadiumiq-ai:latest --platform managed
-   ```
+## 🤝 Author & Contact
+
+Developed by **Ganesh M** with a commitment to next-generation sports operations technology.
+
+* **Author**: Ganesh M
+* **Email**: [gganu86152@gmail.com](mailto:gganu86152@gmail.com)
+* **GitHub**: [@Ganu0124](https://github.com/Ganu0124)
+* **Project Page**: [StadiumIQ-AI](https://github.com/Ganu0124/StadiumIQ-AI)
 
 ---
 
 ## 📄 License
-
-Distributed under the MIT License. See `LICENSE` for details.
+This project is licensed under the MIT License. See `LICENSE` for details.
