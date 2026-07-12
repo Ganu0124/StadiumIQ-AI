@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { authorizeRequest, IncidentSchema } from '@/lib/core/security';
 import { InMemoryCache } from '@/lib/core/cache';
-
-const dbPath = path.join(process.cwd(), 'src/data/db.json');
+import { readDb, runTransaction } from '@/lib/core/db';
 
 // Initialize cache for incidents data (default 3-minute TTL)
 const incidentsCache = new InMemoryCache<string, any>({
@@ -15,28 +12,12 @@ const incidentsCache = new InMemoryCache<string, any>({
 
 const CACHE_KEY = 'stadium_incidents';
 
-function readDb() {
-  try {
-    const fileData = fs.readFileSync(dbPath, 'utf8');
-    return JSON.parse(fileData);
-  } catch (error) {
-    console.error('Failed to read operations JSON database:', error);
-    throw new Error('Database Read Error');
-  }
-}
-
-function writeDb(data: any) {
-  try {
-    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf8');
-  } catch (error) {
-    console.error('Failed to write operations JSON database:', error);
-    throw new Error('Database Write Error');
-  }
-}
-
 /**
  * GET Active Incidents
  * Implements performance caching for operations dashboard responsiveness.
+ * Operational Complexity: O(1) on cache hit; O(N) on cache miss where N is DB size.
+ * 
+ * @returns NextResponse containing the active incidents array.
  */
 export async function GET() {
   try {
@@ -57,7 +38,6 @@ export async function GET() {
       headers: { 'X-Cache': 'MISS' }
     });
   } catch (error) {
-    console.error('GET Incidents API error:', error);
     return NextResponse.json({ error: 'Failed to read database' }, { status: 500 });
   }
 }
@@ -65,7 +45,11 @@ export async function GET() {
 /**
  * POST Log New Incident
  * Restricts access to admin, operations, security, and medical roles.
- * Includes Zod structure validation and dynamic XSS cleaning.
+ * Includes Zod structure validation, dynamic XSS cleaning, and concurrency locks.
+ * Operational Complexity: O(N) where N is database size.
+ * 
+ * @param request The incoming HTTP request.
+ * @returns NextResponse containing the newly created incident item.
  */
 export async function POST(request: Request) {
   try {
@@ -91,28 +75,29 @@ export async function POST(request: Request) {
     }
 
     const body = validation.data;
-    const db = readDb();
     
-    const newIncident = {
-      id: `INC-${Date.now()}`,
-      title: body.title,
-      description: body.description,
-      type: body.type,
-      priority: body.priority,
-      status: 'open',
-      location: body.location,
-      reportedAt: new Date().toISOString(),
-    };
+    const newIncident = await runTransaction((db) => {
+      const incident = {
+        id: `INC-${Date.now()}`,
+        title: body.title,
+        description: body.description,
+        type: body.type,
+        priority: body.priority,
+        status: 'open',
+        location: body.location,
+        reportedAt: new Date().toISOString(),
+      };
 
-    db.incidents.push(newIncident);
-    writeDb(db);
+      db.incidents.push(incident);
+      return incident;
+    });
 
     // 3. Clear cache on update to guarantee consistency
     incidentsCache.delete(CACHE_KEY);
 
     return NextResponse.json(newIncident);
   } catch (error: any) {
-    console.error('POST Incident API error:', error);
     return NextResponse.json({ error: 'Failed to write database', message: error.message }, { status: 500 });
   }
 }
+

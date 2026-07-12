@@ -22,9 +22,25 @@ This project has been fully hardened and optimized for the **h2hskills Hackathon
 
 ---
 
+## Challenge 4: Smart Stadiums & Tournament Operations Alignment
+
+This repository strictly complies with all operational parameters required for Challenge 4. Below is the direct mapping of required constraints to the corresponding source file execution paths:
+
+| Rubric Constraint | Feature & Terminology | Execution File Path | Technical Implementation Detail |
+| --- | --- | --- | --- |
+| **Real-Time Scheduling** | Match overlap, rest recovery, buffer check | [scheduler.ts](file:///d:/projects/stadiumiq-ai/src/lib/core/scheduler.ts) | Sweep-line search checking recovery windows, venue turnaround times ($O(n \log n)$ complexity). |
+| **Cascading Conflict Validation** | Propagation of match delays and sector reallocations | [scheduler.ts](file:///d:/projects/stadiumiq-ai/src/lib/core/scheduler.ts) | `TournamentScheduler.resolveCascadingConflicts` shifts subsequent matches chronologically to avoid rest & venue overlaps on disruption. |
+| **Fail-Safe Capacity Thresholds** | Gating capacity & ticket verification limits | [route.ts (core-demo)](file:///d:/projects/stadiumiq-ai/src/app/api/core-demo/route.ts) | `ticket-validate` and `gate-entry` reject validation (HTTP 403) and log security alerts if zone/gate capacity is reached. |
+| **Concurrency Locks** | Database transaction collision protection | [db.ts](file:///d:/projects/stadiumiq-ai/src/lib/core/db.ts) | Custom `Mutex` class and `runTransaction` method serializing read/write access to `db.json` to prevent race conditions. |
+| **Crowd Management & Routing** | Dijkstra routing, congestion multiplier | [router.ts](file:///d:/projects/stadiumiq-ai/src/lib/core/router.ts) | High-performance shortest path & evacuation routing solver using a Min-Priority Queue running in $O((E+V) \log V)$ time complexity. |
+| **Resource & Personnel Tracking** | Paramedics, security, volunteers, equipment | [mock-data.ts](file:///d:/projects/stadiumiq-ai/src/data/mock-data.ts) | Complete tracking metrics arrays (`staffMembers`, `equipmentList`, `ambulances`, `parkingLots`, `foodVendors`). |
+
+---
+
 ## 📖 Table of Contents
 1. [h2hskills Hackathon Submission](#-h2hskills-hackathon-submission)
-2. [Overview & Solution](#-overview--solution)
+2. [Challenge 4: Smart Stadiums & Tournament Operations Alignment](#challenge-4-smart-stadiums--tournament-operations-alignment)
+3. [Overview & Solution](#-overview--solution)
 3. [Architecture Diagrams](#%EF%B8%8F-architecture-diagrams)
 4. [Key Command Modules](#-key-command-modules)
 5. [Operations Flowchart](#%EF%B8%8F-operations-flowchart)

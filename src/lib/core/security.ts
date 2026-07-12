@@ -22,6 +22,7 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
 /**
  * Sanitize strings to mitigate XSS (Cross-Site Scripting) risks.
  * Safely encodes HTML tags, quotes, slashes, and removes protocols like 'javascript:'.
+ * Operational Complexity: O(L) where L is the string length.
  * 
  * @param input The raw input string to sanitize.
  * @returns The sanitized, safe string.
@@ -54,6 +55,7 @@ export function sanitizeString(input: string): string {
 
 /**
  * Recursively sanitizes all string values within an object.
+ * Operational Complexity: O(D * P) where D is object depth and P is property count.
  * 
  * @param obj The object containing potential unsanitized strings.
  * @returns A new object with all string properties sanitized.
@@ -157,13 +159,16 @@ export const MatchScheduleSchema = z.object({
  * Configurable access configuration options (no hardcoded defaults).
  */
 export interface SecurityConfigOptions {
+  /** The administrator role bypass. */
   superUserRole: UserRole;
+  /** Header key containing user permission token. */
   authHeaderName: string;
 }
 
 /**
  * Checks if a user's role has sufficient permission to access a resource, 
  * using both exact list allowance and hierarchical authorization checking.
+ * Operational Complexity: O(1).
  * 
  * @param userRole The active role of the authenticated user.
  * @param allowedRoles The list of explicit roles allowed to access.
@@ -205,6 +210,7 @@ export function isAuthorized(
 
 /**
  * Extracts and authorizes the request based on request headers.
+ * Operational Complexity: O(1).
  * 
  * @param request The incoming Request object.
  * @param allowedRoles Array of roles authorized to view this route.
@@ -272,3 +278,4 @@ export async function authorizeRequest(
     };
   }
 }
+

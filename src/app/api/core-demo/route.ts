@@ -4,6 +4,7 @@ import { authorizeRequest, UserRole, AnnouncementSchema, IncidentSchema, MatchSc
 import { InMemoryCache } from '@/lib/core/cache';
 import { StadiumRouter } from '@/lib/core/router';
 import { TournamentScheduler, Fixture } from '@/lib/core/scheduler';
+import { runTransaction } from '@/lib/core/db';
 
 // Create a single global cache instance with a max limit of 100 entries and default 5-minute TTL
 const apiCache = new InMemoryCache<string, any>({
@@ -209,12 +210,137 @@ export async function POST(request: Request) {
         });
       }
 
+      case 'schedule-disruption': {
+        const { fixtureId, delayMinutes, newSectorId, fixtures } = payload;
+        if (!fixtureId || delayMinutes === undefined) {
+          return NextResponse.json({ error: "Missing required parameters 'fixtureId' or 'delayMinutes'" }, { status: 400 });
+        }
+
+        const scheduler = new TournamentScheduler({
+          minTeamRestTimeMs: 48 * 60 * 60 * 1000,
+          stadiumMaxCapacity: 82500,
+          bufferTimeMinutes: 90,
+        });
+
+        const activeFixtures = fixtures || scheduledFixtures;
+        const result = scheduler.resolveCascadingConflicts(
+          fixtureId,
+          Number(delayMinutes),
+          newSectorId,
+          activeFixtures
+        );
+
+        return NextResponse.json({
+          success: true,
+          updatedFixtures: result.updatedFixtures,
+          resolutions: result.resolutions,
+        });
+      }
+
+      case 'ticket-validate': {
+        const { zoneId, ticketId, attendeeCount = 1 } = payload;
+        if (!zoneId || !ticketId) {
+          return NextResponse.json({ error: "Missing required parameters 'zoneId' or 'ticketId'" }, { status: 400 });
+        }
+
+        // Hard backend fail-safe boundary check
+        const { crowdZones } = require('@/data/mock-data');
+        const zone = crowdZones.find((z: any) => z.id === zoneId);
+        
+        if (!zone) {
+          return NextResponse.json({ error: `Zone with ID '${zoneId}' not found` }, { status: 404 });
+        }
+
+        const currentOccupancy = zone.currentOccupancy;
+        const maxCapacity = zone.maxCapacity;
+
+        if (currentOccupancy + attendeeCount > maxCapacity) {
+          // Log automated incident alert to db.json via transaction concurrency lock
+          await runTransaction((db: any) => {
+            db.incidents.push({
+              id: `INC-GAT-${Date.now()}`,
+              title: `Fail-Safe Capacity Breach Alert at ${zone.name}`,
+              description: `Blocked entry attempt of ${attendeeCount} fans. Zone occupancy is at ${currentOccupancy}/${maxCapacity} (${((currentOccupancy/maxCapacity)*100).toFixed(1)}%).`,
+              type: 'crowd',
+              priority: 'critical',
+              status: 'open',
+              location: zone.name,
+              reportedAt: new Date().toISOString(),
+            });
+          });
+
+          return NextResponse.json({
+            success: false,
+            error: 'Forbidden: Safe capacity threshold breached for this zone. Entry blocked.',
+            currentOccupancy,
+            maxCapacity,
+            breachPercentage: (((currentOccupancy + attendeeCount) / maxCapacity) * 100).toFixed(1),
+          }, { status: 403 });
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'Ticket validated successfully. Proceed to enter.',
+          zone: zone.name,
+          currentOccupancy: currentOccupancy + attendeeCount,
+          maxCapacity,
+        });
+      }
+
+      case 'gate-entry': {
+        const { gateId, attendeeCount = 1 } = payload;
+        if (!gateId) {
+          return NextResponse.json({ error: "Missing required parameter 'gateId'" }, { status: 400 });
+        }
+
+        // Hard backend boundary check for gate safety capacity limits
+        const { gateStatuses } = require('@/data/mock-data');
+        const gate = gateStatuses.find((g: any) => g.id === gateId);
+
+        if (!gate) {
+          return NextResponse.json({ error: `Gate with ID '${gateId}' not found` }, { status: 404 });
+        }
+
+        const currentThroughput = gate.throughput;
+        const maxCapacity = gate.maxCapacity;
+
+        if (currentThroughput + attendeeCount > maxCapacity) {
+          // Log incident for security dispatch via transaction concurrency lock
+          await runTransaction((db: any) => {
+            db.incidents.push({
+              id: `INC-SEC-${Date.now()}`,
+              title: `Gate Safety Capacity Breach: ${gate.name}`,
+              description: `Gate entry validation blocked automatically. Throughput (${currentThroughput}/${maxCapacity}) has exceeded safety levels.`,
+              type: 'security',
+              priority: 'high',
+              status: 'open',
+              location: gate.name,
+              reportedAt: new Date().toISOString(),
+            });
+          });
+
+          return NextResponse.json({
+            success: false,
+            error: 'Forbidden: Gate throughput safety limit exceeded. Access lane locked down.',
+            throughput: currentThroughput,
+            maxCapacity,
+          }, { status: 403 });
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'Access granted. Turnstile unlocked.',
+          gate: gate.name,
+          throughput: currentThroughput + attendeeCount,
+          maxCapacity,
+        });
+      }
+
       default:
         return NextResponse.json({ error: `Unknown action '${action}'` }, { status: 400 });
     }
 
   } catch (error: any) {
-    console.error('Core sandbox handler error:', error);
     return NextResponse.json({
       error: 'Internal Server Error',
       message: error.message || 'An error occurred during request execution',

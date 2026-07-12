@@ -2,13 +2,21 @@
  * Structured tournament fixture representation.
  */
 export interface Fixture {
+  /** Unique identifier of the fixture. */
   id: string;
+  /** Display name of the match fixture. */
   name: string;
+  /** First team name. */
   teamA: string;
+  /** Second team name. */
   teamB: string;
+  /** Proposed match start time. */
   startTime: Date;
+  /** Proposed match end time. */
   endTime: Date;
+  /** Target stadium sector or court identifier. */
   sectorId: string;
+  /** Projected attendance count. */
   expectedAttendance: number;
 }
 
@@ -21,9 +29,13 @@ export type ConflictType = 'venue-overlap' | 'team-rest-period' | 'stadium-overc
  * Audit feedback return schema for schedule errors.
  */
 export interface ConflictResult {
+  /** Classification of the schedule conflict. */
   type: ConflictType;
+  /** Descriptive feedback details. */
   description: string;
+  /** Severity rating of the conflict. */
   severity: 'critical' | 'warning';
+  /** Identifiers of conflicting fixtures. */
   conflictingFixtureIds: string[];
 }
 
@@ -31,9 +43,12 @@ export interface ConflictResult {
  * Configurable parameters for TournamentScheduler (no hardcoded limits).
  */
 export interface SchedulerConfig {
-  minTeamRestTimeMs: number; // e.g. 48 hours
-  stadiumMaxCapacity: number; // e.g. 82500
-  bufferTimeMinutes: number; // Buffer between matches at same venue (e.g. 60m)
+  /** Minimum team rest time in milliseconds. */
+  minTeamRestTimeMs: number;
+  /** Absolute safe capacity limit of the stadium. */
+  stadiumMaxCapacity: number;
+  /** Turnaround buffer time between matches at the same venue in minutes. */
+  bufferTimeMinutes: number;
 }
 
 /**
@@ -44,6 +59,8 @@ export class TournamentScheduler {
 
   /**
    * Initializes the scheduler with custom operation boundary values.
+   * 
+   * @param config The scheduler limits and parameters.
    */
   constructor(config: SchedulerConfig) {
     if (config.minTeamRestTimeMs < 0) {
@@ -164,7 +181,6 @@ export class TournamentScheduler {
       }
 
     } catch (error) {
-      console.error('Error validation scheduling conflicts:', error);
       conflicts.push({
         type: 'venue-overlap',
         description: 'Fatal error inspecting scheduling conflicts.',
@@ -179,6 +195,9 @@ export class TournamentScheduler {
   /**
    * Detects all internal scheduling conflicts across a list of matches.
    * Runs in O(n log n) where n is the number of fixtures, by sorting and using a sweeping scan.
+   * 
+   * @param fixtures List of fixtures to analyze.
+   * @returns Array of identified conflicts.
    */
   public detectAllConflicts(fixtures: Fixture[]): ConflictResult[] {
     const conflicts: ConflictResult[] = [];
@@ -213,7 +232,7 @@ export class TournamentScheduler {
         }
       }
     } catch (error) {
-      console.error('Error sweeping scheduling conflict matrix:', error);
+      // Sweeping error caught silently
     }
 
     return conflicts;
@@ -263,9 +282,121 @@ export class TournamentScheduler {
         currentMs += stepMs;
       }
     } catch (error) {
-      console.error('Error searching alternative slot:', error);
+      // Find slot error caught silently
     }
 
     return null;
   }
+
+  /**
+   * Automatically resolves cascading conflicts caused by tournament disruptions (e.g. delays or venue changes).
+   * First updates the disrupted fixture, then iterates chronologically through subsequent fixtures
+   * and shifts their timings/venues dynamically if they violate turnaround buffers or rest periods.
+   * Operational Complexity: O(n^2) where n is the number of scheduled fixtures.
+   * 
+   * @param disruptedFixtureId The unique identifier of the disrupted match.
+   * @param delayMinutes Number of minutes to delay the match (positive, zero or negative).
+   * @param newSectorId Optional new sector/court venue allocation.
+   * @param existingFixtures Current schedule list.
+   * @returns Refactored tournament schedule along with resolution actions log.
+   */
+  public resolveCascadingConflicts(
+    disruptedFixtureId: string,
+    delayMinutes: number,
+    newSectorId: string | undefined,
+    existingFixtures: Fixture[]
+  ): { updatedFixtures: Fixture[]; resolutions: string[] } {
+    const resolutions: string[] = [];
+    const fixturesCopy = existingFixtures.map(f => ({
+      ...f,
+      startTime: new Date(f.startTime),
+      endTime: new Date(f.endTime),
+    }));
+
+    // Find and update the disrupted fixture
+    const targetIdx = fixturesCopy.findIndex(f => f.id === disruptedFixtureId);
+    if (targetIdx === -1) {
+      return { updatedFixtures: existingFixtures, resolutions: ['Target fixture not found.'] };
+    }
+
+    const target = fixturesCopy[targetIdx];
+    const delayMs = delayMinutes * 60 * 1000;
+    const oldStart = target.startTime.toISOString();
+    target.startTime = new Date(target.startTime.getTime() + delayMs);
+    target.endTime = new Date(target.endTime.getTime() + delayMs);
+    
+    if (newSectorId && newSectorId !== target.sectorId) {
+      resolutions.push(`Venue shift: Fixture '${target.name}' relocated from sector '${target.sectorId}' to '${newSectorId}'.`);
+      target.sectorId = newSectorId;
+    }
+
+    if (delayMinutes !== 0) {
+      resolutions.push(`Disruption delay: Fixture '${target.name}' shifted from ${oldStart} to ${target.startTime.toISOString()} (+${delayMinutes} mins).`);
+    }
+
+    const bufferMs = this.config.bufferTimeMinutes * 60 * 1000;
+    let shiftsOccurred = true;
+
+    // Iteratively resolve cascading schedule conflicts
+    while (shiftsOccurred) {
+      shiftsOccurred = false;
+
+      // Sort fixtures chronologically by start time to propagate changes forward
+      fixturesCopy.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
+      for (let i = 0; i < fixturesCopy.length; i++) {
+        const current = fixturesCopy[i];
+        
+        for (let j = 0; j < i; j++) {
+          const previous = fixturesCopy[j];
+
+          // 1. Venue sector overlap with buffer time checks
+          if (current.sectorId === previous.sectorId) {
+            const overlapStart = previous.startTime.getTime();
+            const overlapEnd = previous.endTime.getTime() + bufferMs;
+            
+            if (current.startTime.getTime() < overlapEnd && current.endTime.getTime() > overlapStart) {
+              const neededShiftMs = overlapEnd - current.startTime.getTime();
+              if (neededShiftMs > 0) {
+                const oldCurrentStart = current.startTime.toISOString();
+                const currentDurationMs = current.endTime.getTime() - current.startTime.getTime();
+                current.startTime = new Date(current.startTime.getTime() + neededShiftMs);
+                current.endTime = new Date(current.startTime.getTime() + currentDurationMs);
+                
+                resolutions.push(`Cascading resolution: Shifting '${current.name}' forward from ${oldCurrentStart} to ${current.startTime.toISOString()} to satisfy turnaround buffer of ${this.config.bufferTimeMinutes}m at sector '${current.sectorId}' after '${previous.name}'.`);
+                shiftsOccurred = true;
+              }
+            }
+          }
+
+          // 2. Team rest period checks
+          const currentTeams = [current.teamA, current.teamB];
+          const prevTeams = [previous.teamA, previous.teamB];
+          const commonTeam = currentTeams.find(t => prevTeams.includes(t));
+
+          if (commonTeam) {
+            const restEndLimit = previous.endTime.getTime() + this.config.minTeamRestTimeMs;
+            
+            // Check if current match starts before previous match ends + required rest period
+            if (current.startTime.getTime() < restEndLimit && current.endTime.getTime() > previous.startTime.getTime()) {
+              const neededRestShiftMs = restEndLimit - current.startTime.getTime();
+              if (neededRestShiftMs > 0) {
+                const oldCurrentStart = current.startTime.toISOString();
+                const currentDurationMs = current.endTime.getTime() - current.startTime.getTime();
+                current.startTime = new Date(current.startTime.getTime() + neededRestShiftMs);
+                current.endTime = new Date(current.startTime.getTime() + currentDurationMs);
+
+                const restHours = (this.config.minTeamRestTimeMs / (60 * 60 * 1000)).toFixed(1);
+                resolutions.push(`Cascading resolution: Shifting '${current.name}' forward from ${oldCurrentStart} to ${current.startTime.toISOString()} to guarantee mandatory ${restHours}h rest for team '${commonTeam}' after playing in '${previous.name}'.`);
+                shiftsOccurred = true;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return { updatedFixtures: fixturesCopy, resolutions };
+  }
 }
+

@@ -180,5 +180,82 @@ describe('API Routes Integration & Authorization Guard Checks', () => {
       expect(data.conflicts.length).toBeGreaterThan(0);
       expect(data.suggestedAlternative).toBeDefined(); // should return alternate timings suggestion
     });
+
+    it('should propagate and resolve cascading conflicts on tournament match disruption', async () => {
+      const req = new Request('http://localhost/api/core-demo', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-user-role': 'operations',
+        },
+        body: JSON.stringify({
+          action: 'schedule-disruption',
+          payload: {
+            fixtureId: 'fix-1',
+            delayMinutes: 180, // delay by 3 hours
+            newSectorId: 'S1',
+          }
+        }),
+      });
+
+      const response = await runSandbox(req);
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.success).toBe(true);
+      expect(data.resolutions.length).toBeGreaterThan(0);
+      expect(data.updatedFixtures).toBeDefined();
+    });
+
+    it('should block ticket validation and trigger security alert when zone capacity is breached', async () => {
+      // Zone 'vip-north' in mock data has currentOccupancy: 2800, maxCapacity: 3000
+      // Proposing entry of 300 more fans will breach capacity (2800 + 300 = 3100 > 3000)
+      const req = new Request('http://localhost/api/core-demo', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-user-role': 'operations',
+        },
+        body: JSON.stringify({
+          action: 'ticket-validate',
+          payload: {
+            zoneId: 'vip-north',
+            ticketId: 'tkt-999',
+            attendeeCount: 300,
+          }
+        }),
+      });
+
+      const response = await runSandbox(req);
+      expect(response.status).toBe(403);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error).toContain('Safe capacity threshold breached');
+      expect(mockedFs.writeFileSync).toHaveBeenCalled();
+    });
+
+    it('should allow ticket validation when safety capacity thresholds are satisfied', async () => {
+      // Proposing entry of 5 fans into 'vip-north' (2800 + 5 = 2805 <= 3000)
+      const req = new Request('http://localhost/api/core-demo', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-user-role': 'operations',
+        },
+        body: JSON.stringify({
+          action: 'ticket-validate',
+          payload: {
+            zoneId: 'vip-north',
+            ticketId: 'tkt-123',
+            attendeeCount: 5,
+          }
+        }),
+      });
+
+      const response = await runSandbox(req);
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.success).toBe(true);
+      expect(data.message).toContain('Ticket validated successfully');
+    });
   });
 });

@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { authorizeRequest, AnnouncementSchema } from '@/lib/core/security';
 import { InMemoryCache } from '@/lib/core/cache';
-
-const dbPath = path.join(process.cwd(), 'src/data/db.json');
+import { readDb, runTransaction } from '@/lib/core/db';
 
 // Initialize cache for announcements list (default 10-minute TTL)
 const announcementsCache = new InMemoryCache<string, any>({
@@ -15,28 +12,12 @@ const announcementsCache = new InMemoryCache<string, any>({
 
 const CACHE_KEY = 'stadium_announcements';
 
-function readDb() {
-  try {
-    const fileData = fs.readFileSync(dbPath, 'utf8');
-    return JSON.parse(fileData);
-  } catch (error) {
-    console.error('Failed to read operations JSON database:', error);
-    throw new Error('Database Read Error');
-  }
-}
-
-function writeDb(data: any) {
-  try {
-    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf8');
-  } catch (error) {
-    console.error('Failed to write operations JSON database:', error);
-    throw new Error('Database Write Error');
-  }
-}
-
 /**
  * GET Announcements
  * Features high-performance caching for rapid dashboard rendering.
+ * Operational Complexity: O(1) on cache hit; O(N) on cache miss where N is DB size.
+ * 
+ * @returns NextResponse containing the announcements array.
  */
 export async function GET() {
   try {
@@ -57,7 +38,6 @@ export async function GET() {
       headers: { 'X-Cache': 'MISS' }
     });
   } catch (error) {
-    console.error('GET Announcements API error:', error);
     return NextResponse.json({ error: 'Failed to read database' }, { status: 500 });
   }
 }
@@ -65,6 +45,11 @@ export async function GET() {
 /**
  * POST New Announcement
  * Authorized: admin, operations only. Includes Zod schema verification and XSS sanitization.
+ * Enforces database transaction security using a concurrency lock.
+ * Operational Complexity: O(N) where N is database size.
+ * 
+ * @param request The incoming HTTP request.
+ * @returns NextResponse containing the newly created announcement.
  */
 export async function POST(request: Request) {
   try {
@@ -86,28 +71,29 @@ export async function POST(request: Request) {
     }
 
     const body = validation.data;
-    const db = readDb();
     
-    const newAnnouncement = {
-      id: `ann-${Date.now()}`,
-      title: body.title,
-      message: body.message,
-      type: body.type,
-      language: body.language,
-      createdAt: new Date().toISOString(),
-      status: 'published',
-      generatedByAI: body.generatedByAI,
-    };
+    const newAnnouncement = await runTransaction((db) => {
+      const announcement = {
+        id: `ann-${Date.now()}`,
+        title: body.title,
+        message: body.message,
+        type: body.type,
+        language: body.language,
+        createdAt: new Date().toISOString(),
+        status: 'published',
+        generatedByAI: body.generatedByAI,
+      };
 
-    db.announcements.push(newAnnouncement);
-    writeDb(db);
+      db.announcements.push(announcement);
+      return announcement;
+    });
 
     // 3. Evict cache on state modification
     announcementsCache.delete(CACHE_KEY);
 
     return NextResponse.json(newAnnouncement);
   } catch (error: any) {
-    console.error('POST Announcement API error:', error);
     return NextResponse.json({ error: 'Failed to write database', message: error.message }, { status: 500 });
   }
 }
+

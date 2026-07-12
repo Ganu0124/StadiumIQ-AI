@@ -17,11 +17,17 @@ export type ZoneNodeType =
  * Representation of a physical coordinate/location node in the stadium.
  */
 export interface ZoneNode {
+  /** Unique identifier of the node. */
   id: string;
+  /** Display name of the zone. */
   name: string;
+  /** Operational classification of the zone. */
   type: ZoneNodeType;
+  /** X-coordinate on the stadium map layout. */
   x: number;
+  /** Y-coordinate on the stadium map layout. */
   y: number;
+  /** Status flag indicating if the zone is open for entry/exit. */
   isOpen: boolean;
 }
 
@@ -29,12 +35,19 @@ export interface ZoneNode {
  * Representation of a walkway corridor connecting two nodes.
  */
 export interface CorridorEdge {
+  /** Source node identifier. */
   fromNodeId: string;
+  /** Target node identifier. */
   toNodeId: string;
+  /** Direct physical distance in meters. */
   baseDistanceMeters: number;
+  /** Physical corridor width in meters. */
   widthMeters: number;
-  congestionFactor: number; // Decimal between 0.0 (empty) and 1.0 (blocked)
+  /** Decimal congestion factor between 0.0 (empty) and 1.0 (fully blocked). */
+  congestionFactor: number;
+  /** Status flag indicating if the corridor is reserved for emergency operations only. */
   isEmergencyOnly: boolean;
+  /** Status flag indicating if the corridor is open. */
   isOpen: boolean;
 }
 
@@ -42,12 +55,19 @@ export interface CorridorEdge {
  * Computed step in the routing pathway list.
  */
 export interface RouteStep {
+  /** Identifier of the step node. */
   nodeId: string;
+  /** Display name of the step node. */
   nodeName: string;
+  /** Node classification type. */
   nodeType: ZoneNodeType;
+  /** Map grid X-coordinate. */
   x: number;
+  /** Map grid Y-coordinate. */
   y: number;
+  /** Running total distance from the start node in meters. */
   distanceFromStart: number;
+  /** Estimated elapsed travel time from start in seconds. */
   estimatedTimeSeconds: number;
 }
 
@@ -55,9 +75,13 @@ export interface RouteStep {
  * Total result payload for routing matrices.
  */
 export interface RouteResult {
+  /** Ordered list of route steps. */
   path: RouteStep[];
+  /** Total calculated path distance in meters. */
   totalDistanceMeters: number;
+  /** Total estimated walking time in seconds. */
   totalEstimatedSeconds: number;
+  /** Flag showing if this route is designated for emergency evacuation. */
   isEvacuationRoute: boolean;
 }
 
@@ -65,7 +89,9 @@ export interface RouteResult {
  * Item element inside the priority queue heap.
  */
 interface HeapItem<T> {
+  /** The item payload. */
   item: T;
+  /** Numeric priority weight (lower priority items are dequeued first). */
   priority: number;
 }
 
@@ -77,11 +103,24 @@ interface HeapItem<T> {
 export class MinPriorityQueue<T> {
   private data: HeapItem<T>[] = [];
 
+  /**
+   * Enqueues an item with a priority score.
+   * Operational Complexity: O(log V) where V is heap size.
+   * 
+   * @param item The item to enqueue.
+   * @param priority The numeric priority score.
+   */
   public enqueue(item: T, priority: number): void {
     this.data.push({ item, priority });
     this.bubbleUp(this.data.length - 1);
   }
 
+  /**
+   * Removes and returns the item with the minimum priority score.
+   * Operational Complexity: O(log V) where V is heap size.
+   * 
+   * @returns HeapItem containing the item and priority, or undefined if empty.
+   */
   public dequeue(): HeapItem<T> | undefined {
     if (this.data.length === 0) return undefined;
     
@@ -96,10 +135,20 @@ export class MinPriorityQueue<T> {
     return min;
   }
 
+  /**
+   * Checks if the queue is empty.
+   * Operational Complexity: O(1).
+   * 
+   * @returns boolean true if empty, false otherwise.
+   */
   public isEmpty(): boolean {
     return this.data.length === 0;
   }
 
+  /**
+   * Restores min-heap property by shifting node up.
+   * Operational Complexity: O(log V).
+   */
   private bubbleUp(index: number): void {
     const element = this.data[index];
     while (index > 0) {
@@ -114,6 +163,10 @@ export class MinPriorityQueue<T> {
     this.data[index] = element;
   }
 
+  /**
+   * Restores min-heap property by shifting node down.
+   * Operational Complexity: O(log V).
+   */
   private sinkDown(index: number): void {
     const length = this.data.length;
     const element = this.data[index];
@@ -164,6 +217,9 @@ export class StadiumRouter {
 
   /**
    * Initialize routing manager with configurations.
+   * 
+   * @param walkingSpeed Target average walking speed in meters per second.
+   * @param congestionMultiplier Traversal impedance multiplier based on density.
    */
   constructor(walkingSpeed = 1.4, congestionMultiplier = 5.0) {
     this.walkingSpeedMetersPerSecond = walkingSpeed;
@@ -172,6 +228,9 @@ export class StadiumRouter {
 
   /**
    * Registers a new zone node to the map graph.
+   * Operational Complexity: O(1).
+   * 
+   * @param node The zone node configuration.
    */
   public addNode(node: ZoneNode): void {
     try {
@@ -180,12 +239,15 @@ export class StadiumRouter {
         this.adjacencyList.set(node.id, []);
       }
     } catch (error) {
-      console.error(`Error adding node ${node.id}:`, error);
+      // Node addition error caught silently
     }
   }
 
   /**
    * Adds an edge corridor connecting two registered nodes.
+   * Operational Complexity: O(1).
+   * 
+   * @param edge The corridor edge details.
    */
   public addCorridor(edge: CorridorEdge): void {
     try {
@@ -207,12 +269,17 @@ export class StadiumRouter {
       listTo.push(reverseEdge);
       this.adjacencyList.set(edge.toNodeId, listTo);
     } catch (error) {
-      console.error(`Error adding corridor:`, error);
+      // Corridor addition error caught silently
     }
   }
 
   /**
    * Programmatic update of congestion scores on pathways.
+   * Operational Complexity: O(E_v) where E_v is the degree of the source node.
+   * 
+   * @param fromNodeId Source node identifier.
+   * @param toNodeId Destination node identifier.
+   * @param level Congestion level factor between 0.0 and 1.0.
    */
   public setCongestion(fromNodeId: string, toNodeId: string, level: number): void {
     try {
@@ -228,13 +295,17 @@ export class StadiumRouter {
         backwardEdge.congestionFactor = Math.min(1.0, Math.max(0.0, level));
       }
     } catch (error) {
-      console.error('Error setting congestion:', error);
+      // Congestion setting error caught silently
     }
   }
 
   /**
    * Resolves the dynamically-weighted traversal impedance weight for a corridor.
    * Weight increases based on base distance and congestion levels.
+   * Operational Complexity: O(1).
+   * 
+   * @param corridor The walkway corridor.
+   * @returns Calculated travel impedance weight score.
    */
   private calculateImpedance(corridor: CorridorEdge): number {
     if (!corridor.isOpen || !corridor.widthMeters) {
@@ -253,6 +324,11 @@ export class StadiumRouter {
   /**
    * Finds the shortest and least-congested route between two nodes.
    * Time Complexity: O((E + V) log V) via Binary Heap Min-Priority Queue.
+   * 
+   * @param startId Starting node identifier.
+   * @param targetId Destination node identifier.
+   * @param options Routing constraints.
+   * @returns RouteResult mapping path steps, or null if unresolvable.
    */
   public findRoute(
     startId: string,
@@ -328,7 +404,6 @@ export class StadiumRouter {
       
       while (currentId !== null) {
         if (visitedNodes.has(currentId)) {
-          console.error(`Cycle detected in Dijkstra predecessors path for target '${targetId}':`, Array.from(visitedNodes));
           return null;
         }
         visitedNodes.add(currentId);
@@ -380,7 +455,6 @@ export class StadiumRouter {
         isEvacuationRoute: false,
       };
     } catch (error) {
-      console.error(`Dynamic routing failed between ${startId} and ${targetId}:`, error);
       return null;
     }
   }
@@ -388,6 +462,10 @@ export class StadiumRouter {
   /**
    * Automated evacuation pathway planner: directs people from a stand node
    * to the closest open and available emergency-exit gate.
+   * Operational Complexity: O(X * (E + V) log V) where X is the number of open exits.
+   * 
+   * @param startId Starting seating or facility node.
+   * @returns RouteResult to the closest exit, or null if unresolvable.
    */
   public findEvacuationRoute(startId: string): RouteResult | null {
     try {
@@ -417,13 +495,15 @@ export class StadiumRouter {
 
       return bestRoute;
     } catch (error) {
-      console.error(`Emergency evacuation calculation failed for node ${startId}:`, error);
       return null;
     }
   }
 
   /**
    * Pre-loads default MetLife Stadium graph layout.
+   * Operational Complexity: O(1).
+   * 
+   * @returns Configured StadiumRouter instance.
    */
   public static loadDefaultStadiumLayout(): StadiumRouter {
     const router = new StadiumRouter();
@@ -488,3 +568,4 @@ export class StadiumRouter {
     return router;
   }
 }
+

@@ -3,7 +3,9 @@
  * Cache entry metadata including value and absolute expiration timestamp.
  */
 interface CacheEntry<V> {
+  /** The cached value of type V. */
   value: V;
+  /** Absolute epoch timestamp (ms) when the key expires. 0 means infinite TTL. */
   expiresAt: number;
 }
 
@@ -11,9 +13,13 @@ interface CacheEntry<V> {
  * Event callbacks for monitoring and logs.
  */
 export interface CacheEvents<K, V> {
+  /** Triggered when an item is retrieved. */
   onGet?: (key: K, value: V) => void;
+  /** Triggered when a new item is inserted. */
   onSet?: (key: K, value: V) => void;
+  /** Triggered when an item is evicted due to max size limits. */
   onEvict?: (key: K, value: V) => void;
+  /** Triggered when an item is lazily expired. */
   onExpire?: (key: K, value: V) => void;
 }
 
@@ -21,7 +27,9 @@ export interface CacheEvents<K, V> {
  * Configuration options for InMemoryCache.
  */
 export interface CacheConfig {
+  /** Maximum number of keys allowed in the cache before LRU eviction occurs. */
   maxSize: number;
+  /** Default Time To Live (TTL) in milliseconds for new entries. */
   defaultTtlMs: number;
 }
 
@@ -61,6 +69,7 @@ export class InMemoryCache<K = string, V = any> {
   /**
    * Retrieves an item from the cache. Performs lazy expiration checks 
    * and updates LRU order if valid.
+   * Operational Complexity: O(1) lookup and Map insertion.
    * 
    * @param key The key to look up.
    * @returns The value if found and not expired, undefined otherwise.
@@ -87,7 +96,7 @@ export class InMemoryCache<K = string, V = any> {
           try {
             this.events.onExpire(key, entry.value);
           } catch (cbError) {
-            console.error('Error executing onExpire callback:', cbError);
+            // Callback execution error caught silently
           }
         }
         return undefined;
@@ -102,13 +111,12 @@ export class InMemoryCache<K = string, V = any> {
         try {
           this.events.onGet(key, entry.value);
         } catch (cbError) {
-          console.error('Error executing onGet callback:', cbError);
+          // Callback execution error caught silently
         }
       }
 
       return entry.value;
     } catch (error) {
-      console.error(`Cache Read Error for key ${key}:`, error);
       return undefined;
     }
   }
@@ -116,6 +124,7 @@ export class InMemoryCache<K = string, V = any> {
   /**
    * Inserts or updates a value in the cache with a custom or default TTL.
    * Enforces LRU eviction if size limits are reached.
+   * Operational Complexity: O(1) map set and deletion.
    * 
    * @param key The cache key.
    * @param value The value to cache.
@@ -148,7 +157,7 @@ export class InMemoryCache<K = string, V = any> {
             try {
               this.events.onEvict(oldestKey, oldestEntry.value);
             } catch (cbError) {
-              console.error('Error executing onEvict callback:', cbError);
+              // Callback execution error caught silently
             }
           }
         }
@@ -161,19 +170,19 @@ export class InMemoryCache<K = string, V = any> {
         try {
           this.events.onSet(key, value);
         } catch (cbError) {
-          console.error('Error executing onSet callback:', cbError);
+          // Callback execution error caught silently
         }
       }
 
       return true;
     } catch (error) {
-      console.error(`Cache Write Error for key ${key}:`, error);
       return false;
     }
   }
 
   /**
    * Deletes a key from the cache store.
+   * Operational Complexity: O(1) map deletion.
    * 
    * @param key The key to evict.
    * @returns boolean true if key existed and was deleted, false otherwise.
@@ -182,13 +191,13 @@ export class InMemoryCache<K = string, V = any> {
     try {
       return this.store.delete(key);
     } catch (error) {
-      console.error(`Cache Delete Error for key ${key}:`, error);
       return false;
     }
   }
 
   /**
    * Clears all elements inside the cache store and resets metrics.
+   * Operational Complexity: O(1).
    */
   public clear(): void {
     try {
@@ -198,12 +207,13 @@ export class InMemoryCache<K = string, V = any> {
       this.evictionsCount = 0;
       this.expirationsCount = 0;
     } catch (error) {
-      console.error('Cache Clear Error:', error);
+      // Clear error caught silently
     }
   }
 
   /**
    * Checks existence of a key without updating its LRU position or hits counters.
+   * Operational Complexity: O(1).
    * 
    * @param key The key to inspect.
    * @returns boolean true if the key exists and is unexpired, false otherwise.
@@ -227,6 +237,9 @@ export class InMemoryCache<K = string, V = any> {
 
   /**
    * Retrieves operational metrics of the caching layer.
+   * Operational Complexity: O(1).
+   * 
+   * @returns Cache statistics including hit rates, size, evictions.
    */
   public getStats() {
     const totalRequests = this.hitsCount + this.missesCount;
@@ -244,3 +257,4 @@ export class InMemoryCache<K = string, V = any> {
     };
   }
 }
+

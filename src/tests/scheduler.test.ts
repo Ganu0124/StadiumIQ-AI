@@ -149,4 +149,33 @@ describe('TournamentScheduler (Collision & Conflict Auditor)', () => {
     const suggestedTime = suggestion!.toISOString();
     expect(suggestedTime).toBeDefined();
   });
+
+  it('should resolve cascading conflicts and shift subsequent matches when a match is delayed', () => {
+    const allFixtures: Fixture[] = [
+      ...existingFixtures,
+      {
+        id: 'fix-3',
+        name: 'France vs Germany',
+        teamA: 'France',
+        teamB: 'Germany',
+        startTime: new Date('2026-07-11T15:00:00Z'),
+        endTime: new Date('2026-07-11T17:00:00Z'),
+        sectorId: 'Sector-North',
+        expectedAttendance: 50000,
+      }
+    ];
+
+    // Delay fix-1 by 24 hours (1440 minutes), shifting it to July 11 18:00
+    const result = scheduler.resolveCascadingConflicts('fix-1', 24 * 60, undefined, allFixtures);
+    expect(result.updatedFixtures.length).toBe(3);
+    expect(result.resolutions.length).toBeGreaterThan(0);
+
+    const fix1 = result.updatedFixtures.find(f => f.id === 'fix-1')!;
+    const fix3 = result.updatedFixtures.find(f => f.id === 'fix-3')!;
+
+    // Chronological order: fix-3 (July 11 15:00), then fix-1 (July 11 18:00)
+    // French team plays both. Rest violation triggers cascade.
+    // fix-1 (starts July 11 18:00) is shifted forward to July 13 17:00 (fix-3 end + 48h rest)
+    expect(new Date(fix1.startTime).getTime()).toBeGreaterThanOrEqual(new Date(fix3.endTime).getTime() + 48 * 60 * 60 * 1000);
+  });
 });
