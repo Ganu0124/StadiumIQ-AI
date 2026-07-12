@@ -46,7 +46,7 @@ graph TD
     classDef external fill:#1e1b4b,stroke:#ef4444,stroke-width:2px,color:#f8fafc;
 
     %% Components
-    User[💻 User Browser / Client]:::client
+    User[💻 User  Browser / Client]:::client
     NextApp[⚙️ Next.js App Router]:::server
     AuthCtx[🔑 Auth Session Context]:::server
     Recharts[📊 Recharts Rendering]:::client
