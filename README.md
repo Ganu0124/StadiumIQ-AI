@@ -1,4 +1,4 @@
-# StadiumIQ AI 🏟️🤖
+# .....................
 
 [![Build & Verification Pipeline](https://github.com/Ganu0124/StadiumIQ-AI/actions/workflows/deploy.yml/badge.svg)](https://github.com/Ganu0124/StadiumIQ-AI/actions/workflows/deploy.yml)
 [![Next.js](https://img.shields.io/badge/Next.js-16.0-black?style=flat&logo=next.dotjs)](https://nextjs.org/)
