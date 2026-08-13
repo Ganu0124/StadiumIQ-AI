@@ -10,7 +10,7 @@
 
 ---
 
-## 🏆 
+## 🏆 h2hskills Hackathon Submission
 This project has been fully hardened and optimized for the **h2hskills Hackathon**, achieving a perfect score across all core evaluation criteria:
 
 * **⚡ High-Performance Cache**: Custom in-memory storage [cache.ts](file:///d:/projects/stadiumiq-ai/src/lib/core/cache.ts) with **O(1) Least Recently Used (LRU) eviction** and lazy **Time-To-Live (TTL) expiration** to accelerate operations requests.
