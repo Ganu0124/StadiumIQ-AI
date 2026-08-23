@@ -226,3 +226,6 @@ Developed by **Ganesh M** with a commitment to next-generation sports operations
 
 ---
 
+
+## 📄 License
+This project is licensed under the MIT License. See `LICENSE` for details.
