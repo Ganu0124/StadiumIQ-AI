@@ -1,6 +1,3 @@
-yjgmkk
-oigjgj
-kjgjyjk
 # StadiumIQ AI 🏟️🤖
 
 [![Build & Verification Pipeline](https://github.com/Ganu0124/StadiumIQ-AI/actions/workflows/deploy.yml/badge.svg)](https://github.com/Ganu0124/StadiumIQ-AI/actions/workflows/deploy.yml)
